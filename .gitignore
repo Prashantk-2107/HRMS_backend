@@ -1,0 +1,46 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Local databases (e.g. SQLite)
+*.db
+*.db-journal
+
+# User upload directories (keep the folder but ignore contents)
+uploads/*
+!uploads/.gitkeep
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Markdown files
+
+# Other files
+*.log
+*.tmp
+*.md
+improvement.md

@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum HolidayType {
+  national
+  festival
+  company
+}
+
+model Holiday {
+  holiday_id    String      @id @default(uuid()) @db.Uuid
+  holiday_date  DateTime    @db.Date
+  holiday_name  String      @db.VarChar(100)
+  holiday_type  HolidayType
+
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  @@map("holidays")
+}
+
+model Role {
+  role_id         String           @id @default(uuid()) @db.Uuid
+  name            String           @unique @db.VarChar(50)
+  description     String?
+
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+
+  rolePermissions RolePermission[]
+  employees       Employee[]
+
+  @@map("roles")
+}
+
+model Permission {
+  permission_id   String           @id @default(uuid()) @db.Uuid
+  name            String           @unique @db.VarChar(50)
+  is_active       Boolean          @default(true)
+
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+
+  rolePermissions  RolePermission[]
+  extraPermissions ExtraPermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role_id       String @db.Uuid
+  permission_id String @db.Uuid
+  isGranted     Boolean @default(true)
+
+  role          Role       @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+
+enum EmploymentType {
+  permanent
+  intern
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum EmployeeStatus {
+  active
+  in_active
+}
+
+model Employee {
+  emp_id                     String           @id @default(uuid()) @db.Uuid
+  empCode                    String           @unique @db.VarChar(20)
+  first_name                 String?          @db.VarChar(100)
+  last_name                  String?          @db.VarChar(100)
+  email                      String           @unique @db.VarChar(50)
+  profile_image              String?
+  address                    String
+  phone_number               String           @unique @db.VarChar(10)
+  date_of_birth              DateTime?        @db.Date
+  joining_date               DateTime         @db.Date
+  employment_type            EmploymentType?
+  gender                     Gender?
+  employee_status            EmployeeStatus?  @default(active)
+  emergency_contact_name     String?          @db.VarChar(255)
+  emergency_contact_number   String?          @db.VarChar(20)
+  password                   String?           @db.VarChar(255)
+  is_email_verified          Boolean          @default(false)
+  last_login_at              DateTime?
+  role_id                    String           @db.Uuid
+  role                       Role             @relation(fields: [role_id], references: [role_id])
+  access_token_set           String?          @db.Text
+  refresh_token_set          String?          @db.Text
+  created_at                 DateTime         @default(now())
+  updated_at                 DateTime         @updatedAt
+
+  documents        EmployeeDocument[] @relation("EmployeeToDocuments")
+  uploadedDocs     EmployeeDocument[] @relation("UploaderToDocuments")
+  verifiedDocs     EmployeeDocument[] @relation("VerifierToDocuments")
+  extraPermissions ExtraPermission[]
+  bank_details     EmployeeBankDetails[]
+
+  @@map("employees")
+}
+
+enum DocumentType {
+  aadhar
+  pan
+  passport
+  driving_license
+  degree
+  experience_letter
+  offer_letter
+  other
+}
+
+enum VerificationStatus {
+  pending
+  verified
+  rejected
+}
+
+model EmployeeDocument {
+  document_id         String             @id @default(uuid()) @db.Uuid
+  emp_id              String             @db.Uuid
+  document_name       String?            @db.VarChar(255)
+  document_type       DocumentType
+  document_number     String?            @db.Text
+  file_url            String             @db.Text
+  uploaded_by         String?            @db.Uuid
+  verification_status VerificationStatus @default(pending)
+  verified_by         String?            @db.Uuid
+  verified_at         DateTime?
+  rejection_reason    String?            @db.Text
+
+  employee            Employee           @relation("EmployeeToDocuments", fields: [emp_id], references: [emp_id], onDelete: Cascade)
+  uploader            Employee?          @relation("UploaderToDocuments", fields: [uploaded_by], references: [emp_id], onDelete: SetNull)
+  verifier            Employee?          @relation("VerifierToDocuments", fields: [verified_by], references: [emp_id], onDelete: SetNull)
+
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
+
+  @@map("employees_documents")
+}
+
+model ExtraPermission {
+  extrapermission_id String  @id @default(uuid()) @db.Uuid
+  emp_id             String  @db.Uuid
+  permission_id      String  @db.Uuid
+  isGranted          Boolean
+
+  employee   Employee   @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+  permission Permission @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade)
+
+  @@unique([emp_id, permission_id])
+  @@map("extra_permissions")
+}
+
+enum AccountType {
+  savings
+  current
+}
+
+model EmployeeBankDetails {
+  emp_bank_id    String      @id @default(uuid()) @db.Uuid
+  emp_id         String      @db.Uuid
+  bank_name      String      @db.Text
+  account_number String      @db.Text
+  ifsc_code      String      @db.Text
+  branch_address String      @db.Text
+  account_type   AccountType
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+
+  employee       Employee    @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+
+  @@unique([emp_id, account_number])
+  @@map("employee_bank_details")
+}
