@@ -1,5 +1,6 @@
 import prisma from "../../config/db.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { getRequiredDependencies } from "../../utils/permissionDependencies.js";
 
 /**
  * Service to validate and execute assigning a permission to a role.
@@ -24,6 +25,29 @@ async function assignPermissionToRoleService(role_id, permission_id) {
 
   if (!targetPermission) {
     throw new ApiError(404, "Permission not found");
+  }
+
+  // Validate dependencies
+  const dependencies = getRequiredDependencies(targetPermission.name);
+  if (dependencies.length > 0) {
+    const activeRolePermissions = await prisma.rolePermission.findMany({
+      where: {
+        role_id,
+        isGranted: true,
+        permission: {
+          name: { in: dependencies },
+        },
+      },
+      include: { permission: true },
+    });
+    const activeNames = activeRolePermissions.map((rp) => rp.permission.name);
+    const missing = dependencies.filter((dep) => !activeNames.includes(dep));
+    if (missing.length > 0) {
+      throw new ApiError(
+        400,
+        `Cannot assign permission '${targetPermission.name}' because the following required permissions are missing: ${missing.join(", ")}`
+      );
+    }
   }
 
   // Check if role already has this permission
