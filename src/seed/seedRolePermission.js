@@ -24,7 +24,7 @@ async function main() {
   const mappings = [
     {
       permissionName: "emp:get_all",
-      roles: ["Human_resource", "super_admin"],
+      roles: ["Human_resource", "super_admin", "Project_manager"],
     },
     {
       permissionName: "emp:create",

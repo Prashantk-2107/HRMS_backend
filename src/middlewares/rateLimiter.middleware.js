@@ -22,7 +22,7 @@ const getRemainingTimeString = (resetTime) => {
 
 // Rate limiter for authentication-sensitive endpoints
 const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 5 minutes
   limit: 10, // Limit each IP to 10 requests per windowMs
   standardHeaders: "draft-7", // combines RateLimit headers
   legacyHeaders: false, // disables X-RateLimit-* headers
@@ -39,7 +39,7 @@ const authRateLimiter = rateLimit({
 
 // General rate limiter for standard API routes
 const apiRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 2 * 60 * 1000, // 2 minutes
   limit: 100, // Limit each IP to 100 requests per windowMs
   standardHeaders: "draft-7",
   legacyHeaders: false,
@@ -56,7 +56,7 @@ const apiRateLimiter = rateLimit({
 
 // Create rate limiter for verify otp
 const verifyOtpRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 2 * 60 * 1000, // 2 minutes
   limit: 10,
   standardHeaders: "draft-7",
   legacyHeaders: false,

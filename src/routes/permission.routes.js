@@ -2,6 +2,7 @@ import { Router } from "express";
 import { setExtraPermission } from "../modules/permissions/setExtraPermission.js";
 import { deleteExtraPermission } from "../modules/permissions/deleteExtraPermission.js";
 import { getAllEmpPermission } from "../modules/permissions/getAllEmpPermission.js";
+import { getAllRolePermission } from "../modules/permissions/getAllRolePermission.js";
 import { assignPermissionToRole } from "../modules/permissions/assignPermissionTorole.js";
 import { grantRevokePermission } from "../modules/permissions/grant_revoke_permission.js";
 import { getAllPermissions } from "../modules/permissions/get_all_permissions.js";
@@ -21,6 +22,10 @@ route
 route
   .route("/emp-permissions/:emp_id")
   .get(verifyJWT, getAllEmpPermission);
+
+route
+  .route("/role-permissions/:role_id")
+  .get(verifyJWT, checkPermission("role:get_all"), getAllRolePermission);
 
 route
   .route("/assign-permission-to-role")

@@ -1,5 +1,6 @@
 import prisma from "../../config/db.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { getRequiredDependencies, getDependentPermissions } from "../../utils/permissionDependencies.js";
 
 /**
  * Service to grant or revoke a permission for a role in the database.
@@ -25,6 +26,53 @@ async function grantRevokePermissionService(role_id, permission_id, isGranted) {
 
   if (!targetPermission) {
     throw new ApiError(404, "Permission not found");
+  }
+
+  // Validate dependencies
+  if (isGranted) {
+    const dependencies = getRequiredDependencies(targetPermission.name);
+    if (dependencies.length > 0) {
+      const activeRolePermissions = await prisma.rolePermission.findMany({
+        where: {
+          role_id,
+          isGranted: true,
+          permission: {
+            name: { in: dependencies },
+          },
+        },
+        include: { permission: true },
+      });
+      const activeNames = activeRolePermissions.map((rp) => rp.permission.name);
+      const missing = dependencies.filter((dep) => !activeNames.includes(dep));
+      if (missing.length > 0) {
+        throw new ApiError(
+          400,
+          `Cannot grant permission '${targetPermission.name}' because the following required permissions are missing: ${missing.join(", ")}`
+        );
+      }
+    }
+  } else {
+    // Revoking
+    const dependents = getDependentPermissions(targetPermission.name);
+    if (dependents.length > 0) {
+      const activeDependents = await prisma.rolePermission.findMany({
+        where: {
+          role_id,
+          isGranted: true,
+          permission: {
+            name: { in: dependents },
+          },
+        },
+        include: { permission: true },
+      });
+      if (activeDependents.length > 0) {
+        const activeNames = activeDependents.map((rp) => rp.permission.name);
+        throw new ApiError(
+          400,
+          `Cannot revoke permission '${targetPermission.name}' because the following active permissions depend on it: ${activeNames.join(", ")}. Please revoke them first.`
+        );
+      }
+    }
   }
 
   try {
