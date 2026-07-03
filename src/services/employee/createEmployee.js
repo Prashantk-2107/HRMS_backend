@@ -101,7 +101,7 @@ async function createEmployeeService(employeeData) {
     await saveSetupToken(email, setupToken);
 
     // Enqueue setup email to mailQueue
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl = process.env.FRONTEND_URL || "http://192.168.1.18:5173";
     const setupLink = `${frontendUrl}/create-password?email=${encodeURIComponent(email)}&token=${setupToken}`;
     const htmlContent = createPasswordHtml(setupLink, first_name || "Employee");
 
