@@ -21,7 +21,7 @@ async function main() {
     });
   }
 
-  const adminEmail = (process.env.ADMIN_EMAIL || "prashantkamboj2107@gmail.com").toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@gmail.com").toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || "Admin@123";
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
 

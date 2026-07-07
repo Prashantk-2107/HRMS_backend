@@ -23,6 +23,7 @@ RUN npx prisma generate
 # Copy the rest of the application code
 COPY . .
 
+
 # Expose the API port
 EXPOSE 5000
 
