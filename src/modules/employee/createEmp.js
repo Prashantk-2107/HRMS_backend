@@ -15,9 +15,16 @@ const createUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Validation failed", formattedErrors);
   }
 
-  
+  let frontendUrl = req.headers.origin;
+  if (!frontendUrl && req.headers.referer) {
+    try {
+      frontendUrl = new URL(req.headers.referer).origin;
+    } catch (e) {
+      // ignore
+    }
+  }
 
-  const createdEmployee = await createEmployeeService(validation.data);
+  const createdEmployee = await createEmployeeService({ ...validation.data, frontendUrl });
 
   return res.status(201).json(
     new ApiResponse(201, "Employee created successfully", {

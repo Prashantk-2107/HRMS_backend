@@ -40,9 +40,36 @@ async function createEmployeeService(employeeData) {
     throw new ApiError(400, `Invalid role_id: Role does not exist.`);
   }
 
+  // Validate DOB vs Current Date
+  if (date_of_birth) {
+    const dobDate = new Date(date_of_birth);
+    if (dobDate > new Date()) {
+      throw new ApiError(400, "Date of birth cannot be in the future.");
+    }
+    // Validate DOJ vs DOB
+    if (joining_date) {
+      const dojDate = new Date(joining_date);
+      if (dojDate < dobDate) {
+        throw new ApiError(400, "Date of joining cannot be before date of birth.");
+      }
+    }
+  }
+
+  const formattedPhoneNumber = (phone_number && phone_number.trim() !== "") ? phone_number.trim() : null;
+  const formattedEmergencyNumber = (emergency_contact_number && emergency_contact_number.trim() !== "") ? emergency_contact_number.trim() : null;
+
+  const orConditions = [
+    { email: lowerCaseEmail },
+    { empCode },
+  ];
+
+  if (formattedPhoneNumber) {
+    orConditions.push({ phone_number: formattedPhoneNumber });
+  }
+
   const existingEmployee = await prisma.employee.findFirst({
     where: {
-      OR: [{ email: lowerCaseEmail }, { empCode }, { phone_number }],
+      OR: orConditions,
     },
   });
 
@@ -56,10 +83,23 @@ async function createEmployeeService(employeeData) {
         "An employee with this employee code already exists.",
       );
     }
-    if (existingEmployee.phone_number === phone_number) {
+    if (formattedPhoneNumber && existingEmployee.phone_number === formattedPhoneNumber) {
       throw new ApiError(
         400,
         "An employee with this phone number already exists.",
+      );
+    }
+  }
+
+  // Validate emergency contact number uniqueness
+  if (formattedEmergencyNumber) {
+    const existingEmergency = await prisma.employee.findFirst({
+      where: { emergency_contact_number: formattedEmergencyNumber },
+    });
+    if (existingEmergency) {
+      throw new ApiError(
+        400,
+        "An employee with this emergency contact number already exists.",
       );
     }
   }
@@ -73,7 +113,7 @@ async function createEmployeeService(employeeData) {
         email: lowerCaseEmail,
         profile_image,
         address,
-        phone_number,
+        phone_number: formattedPhoneNumber,
         date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
         joining_date: new Date(joining_date),
         employment_type,
@@ -82,7 +122,7 @@ async function createEmployeeService(employeeData) {
         is_email_verified: false, // Email is not verified yet
         password: null, // No password initially
         emergency_contact_name,
-        emergency_contact_number,
+        emergency_contact_number: formattedEmergencyNumber,
         role_id,
       },
       include: {
@@ -101,8 +141,8 @@ async function createEmployeeService(employeeData) {
     await saveSetupToken(email, setupToken);
 
     // Enqueue setup email to mailQueue
-    const frontendUrl = process.env.FRONTEND_URL || "http://192.168.1.18:5173";
-    const setupLink = `${frontendUrl}/create-password?email=${encodeURIComponent(email)}&token=${setupToken}`;
+    const resolvedFrontendUrl = employeeData.frontendUrl || process.env.FRONTEND_URL || "http://192.168.1.18:5173";
+    const setupLink = `${resolvedFrontendUrl}/create-password?email=${encodeURIComponent(email)}&token=${setupToken}`;
     const htmlContent = createPasswordHtml(setupLink, first_name || "Employee");
 
     await mailQueue.add("send-setup-email", {

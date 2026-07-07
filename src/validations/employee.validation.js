@@ -19,8 +19,11 @@ const createEmployeeSchema = z.object({
     .string({ required_error: "Address is required" })
     .min(1, "Address cannot be empty"),
   phone_number: z
-    .string({ required_error: "Phone number is required" })
-    .regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+    .string()
+    .regex(/^\d{10}$/, "Phone number must be exactly 10 digits")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   joining_date: z
     .string({ required_error: "Joining date is required" })
     .refine((val) => !isNaN(Date.parse(val)), {
@@ -52,6 +55,9 @@ const createEmployeeSchema = z.object({
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "Invalid date of birth format",
     })
+    .refine((val) => new Date(val) <= new Date(), {
+      message: "Date of birth cannot be in the future",
+    })
     .optional()
     .nullable(),
   employment_type: z.enum(["permanent", "intern"]).optional().nullable(),
@@ -59,6 +65,14 @@ const createEmployeeSchema = z.object({
   employee_status: z.enum(["active", "in_active"]).optional().nullable(),
   emergency_contact_name: z.string().max(255).optional().nullable(),
   emergency_contact_number: z.string().max(20).optional().nullable(),
+}).refine((data) => {
+  if (data.joining_date && data.date_of_birth) {
+    return new Date(data.joining_date) >= new Date(data.date_of_birth);
+  }
+  return true;
+}, {
+  message: "Joining date cannot be before date of birth",
+  path: ["joining_date"],
 });
 
 const setEmployeeStatusSchema = z.object({
@@ -99,7 +113,9 @@ const updateEmployeeSchema = z.object({
   phone_number: z
     .string()
     .regex(/^\d{10}$/, "Phone number must be exactly 10 digits")
-    .optional(),
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   emergency_contact_name: z
     .string()
     .max(255)
@@ -130,7 +146,9 @@ const adminUpdateEmployeeSchema = z.object({
   phone_number: z
     .string()
     .regex(/^\d{10}$/, "Phone number must be exactly 10 digits")
-    .optional(),
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   emergency_contact_name: z
     .string()
     .max(255)
@@ -151,6 +169,9 @@ const adminUpdateEmployeeSchema = z.object({
     .string()
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "Invalid date of birth format",
+    })
+    .refine((val) => new Date(val) <= new Date(), {
+      message: "Date of birth cannot be in the future",
     })
     .optional()
     .nullable(),

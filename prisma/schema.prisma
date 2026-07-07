@@ -94,7 +94,7 @@ model Employee {
   email                      String           @unique @db.VarChar(50)
   profile_image              String?
   address                    String
-  phone_number               String           @unique @db.VarChar(10)
+  phone_number               String?          @unique @db.VarChar(10)
   date_of_birth              DateTime?        @db.Date
   joining_date               DateTime         @db.Date
   employment_type            EmploymentType?
