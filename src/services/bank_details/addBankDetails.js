@@ -26,18 +26,17 @@ async function addBankDetailsService(bankDetailsData) {
     throw new ApiError(404, "Employee not found with the provided ID.");
   }
 
-  // 2. Check if this specific account number is already registered for this employee
+  // 2. Check if any bank details are already registered for this employee
   const existingBankDetails = await prisma.employeeBankDetails.findFirst({
     where: {
       emp_id,
-      account_number,
     },
   });
 
   if (existingBankDetails) {
     throw new ApiError(
       400,
-      "This bank account number is already registered for this employee."
+      "Bank details are already registered for this employee. Only one bank account can be added."
     );
   }
 

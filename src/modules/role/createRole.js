@@ -10,6 +10,10 @@ const createRole = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Name and description are required");
   }
 
+  if (!/^[a-zA-Z\s]+$/.test(name)) {
+    throw new ApiError(400, "Role name can only contain alphabets and spaces");
+  }
+
   const normalizedName = name
     .trim()
     .toLowerCase()

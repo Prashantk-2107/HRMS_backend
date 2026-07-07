@@ -5,7 +5,7 @@ import { saveSetupToken } from "../otp/setupTokenRedisService.js";
 import { mailQueue } from "../../queues/mailQueue.js";
 import { createPasswordHtml } from "../../modules/mail/createPasswordHtml.js";
 
-async function resendSetupLinkService({ email }) {
+async function resendSetupLinkService({ email, frontendUrl }) {
   const lowerCaseEmail = email ? email.toLowerCase() : "";
   const employee = await prisma.employee.findUnique({
     where: { email: lowerCaseEmail },
@@ -30,8 +30,8 @@ async function resendSetupLinkService({ email }) {
   await saveSetupToken(lowerCaseEmail, setupToken);
 
   // Enqueue setup email to mailQueue
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-  const setupLink = `${frontendUrl}/create-password?email=${encodeURIComponent(lowerCaseEmail)}&token=${setupToken}`;
+  const resolvedFrontendUrl = frontendUrl || process.env.FRONTEND_URL || "http://localhost:3000";
+  const setupLink = `${resolvedFrontendUrl}/create-password?email=${encodeURIComponent(lowerCaseEmail)}&token=${setupToken}`;
   const htmlContent = createPasswordHtml(setupLink, employee.first_name || "Employee");
 
   await mailQueue.add("send-setup-email", {

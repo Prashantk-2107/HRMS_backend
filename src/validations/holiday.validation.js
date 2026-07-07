@@ -39,4 +39,17 @@ const updateHolidaySchema = z.object({
   }).optional(),
 });
 
-export { createHolidaySchema, updateHolidaySchema };
+const markWeekendsSchema = z.object({
+  year: z
+    .number({ required_error: "Year is required" })
+    .int()
+    .min(1970, "Year must be 1970 or later")
+    .max(2100, "Year cannot exceed 2100"),
+  month: z
+    .number({ required_error: "Month is required" })
+    .int()
+    .min(1, "Month must be between 1 and 12")
+    .max(12, "Month must be between 1 and 12"),
+});
+
+export { createHolidaySchema, updateHolidaySchema, markWeekendsSchema };

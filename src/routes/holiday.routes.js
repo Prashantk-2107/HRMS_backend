@@ -3,10 +3,20 @@ import { createHoliday } from "../modules/holidays/createHoliday.js";
 import { updateHoliday } from "../modules/holidays/updateHoliday.js";
 import { deleteHoliday } from "../modules/holidays/deleteHoliday.js";
 import { getAllHolidays } from "../modules/holidays/get_all_holidays.js";
+import { markWeekends } from "../modules/holidays/markWeekends.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkPermission } from "../middlewares/permission.middleware.js";
 
 const router = Router();
+
+// Endpoint: POST /api/v1/holiday/mark-weekends
+// Guarded by verifyJWT and checkPermission("holiday:manage")
+router.post(
+  "/mark-weekends",
+  verifyJWT,
+  checkPermission("holiday:manage"),
+  markWeekends
+);
 
 // Endpoint: POST /api/v1/holiday/create-holiday
 // Guarded by verifyJWT and checkPermission("holiday:manage")

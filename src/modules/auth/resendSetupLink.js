@@ -14,7 +14,16 @@ const resendSetupLink = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Validation failed", formattedErrors);
   }
 
-  await resendSetupLinkService(validation.data);
+  let frontendUrl = req.headers.origin;
+  if (!frontendUrl && req.headers.referer) {
+    try {
+      frontendUrl = new URL(req.headers.referer).origin;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  await resendSetupLinkService({ ...validation.data, frontendUrl });
 
   return res
     .status(200)
