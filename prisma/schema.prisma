@@ -117,6 +117,7 @@ model Employee {
   verifiedDocs     EmployeeDocument[] @relation("VerifierToDocuments")
   extraPermissions ExtraPermission[]
   bank_details     EmployeeBankDetails[]
+  attendances      Attendance[]
 
   @@map("employees")
 }
@@ -195,3 +196,30 @@ model EmployeeBankDetails {
   @@unique([emp_id, account_number])
   @@map("employee_bank_details")
 }
+
+enum AttendanceStatus {
+  present
+  absent
+  half_day
+  leave
+  holiday
+}
+
+model Attendance {
+  id              String           @id @default(uuid()) @db.Uuid
+  emp_id          String           @db.Uuid
+  attendance_date DateTime         @db.Date
+  check_in        DateTime?
+  check_out       DateTime?
+  status          AttendanceStatus
+  working_hours   Decimal?         @db.Decimal(5, 2)
+
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+
+  employee        Employee         @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+
+  @@unique([emp_id, attendance_date])
+  @@map("attendances")
+}
+
