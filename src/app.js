@@ -7,19 +7,19 @@ const app = express();
 
 // Standard middlewares
 const allowedOrigins = [
-  process.env.CORS_ORIGIN,
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5175",
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:3002",
+  process.env.FRONTEND_URL
 ].filter(Boolean);
+
+const isLocalOrigin = (origin) => {
+  // Matches http/https with localhost, 127.0.0.1, 192.168.x.x, 10.x.x.x, or 172.16-31.x.x and optional port
+  const localRegex = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/;
+  return localRegex.test(origin);
+};
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isLocalOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`Origin ${origin} is not allowed by CORS`));
