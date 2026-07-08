@@ -94,8 +94,6 @@ async function updateEmployeeProfileService(emp_id, updateData) {
     // Sanitize employee record
     const sanitizedEmployee = { ...updatedEmployee };
     delete sanitizedEmployee.password;
-    delete sanitizedEmployee.access_token_set;
-    delete sanitizedEmployee.refresh_token_set;
 
     return sanitizedEmployee;
   } catch (error) {

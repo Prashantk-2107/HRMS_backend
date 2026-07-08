@@ -111,8 +111,6 @@ async function getEmployeeByIdService(emp_id) {
     if (employee) {
       const sanitized = { ...employee };
       delete sanitized.password;
-      delete sanitized.access_token_set;
-      delete sanitized.refresh_token_set;
       return sanitized;
     }
 

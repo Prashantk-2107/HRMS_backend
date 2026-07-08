@@ -47,8 +47,6 @@ async function assignRoleService(emp_id, role_id) {
     // Sanitize employee record (remove sensitive tokens/passwords)
     const sanitizedEmployee = { ...updatedEmployee };
     delete sanitizedEmployee.password;
-    delete sanitizedEmployee.access_token_set;
-    delete sanitizedEmployee.refresh_token_set;
 
     return sanitizedEmployee;
   } catch (error) {

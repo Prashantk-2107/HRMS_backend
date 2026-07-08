@@ -4,7 +4,7 @@ import { isPasswordValid } from "../employee/isPasswordValid.js";
 import { generateAccessAndRefereshTokens } from "../../utils/generateTokens.js";
 import { ApiError } from "../../utils/ApiError.js";
 
-async function loginService({ email, password }) {
+async function loginService({ email, password, deviceInfo, ipAddress }) {
   const employee = await getEmployeeByEmail(email);
 
   if (!employee) {
@@ -32,6 +32,7 @@ async function loginService({ email, password }) {
 
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
     employee.emp_id,
+    { deviceInfo, ipAddress }
   );
 
   await updateEmployee(employee.emp_id, {
@@ -40,8 +41,6 @@ async function loginService({ email, password }) {
 
   const loggedInEmployee = { ...employee };
   delete loggedInEmployee.password;
-  delete loggedInEmployee.access_token_set;
-  delete loggedInEmployee.refresh_token_set;
 
   return {
     employee: loggedInEmployee,

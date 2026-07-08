@@ -39,8 +39,6 @@ const setEmployeeStatus = asyncHandler(async (req, res) => {
   // Sanitize the returned employee details
   const sanitizedEmployee = { ...employee };
   delete sanitizedEmployee.password;
-  delete sanitizedEmployee.access_token_set;
-  delete sanitizedEmployee.refresh_token_set;
 
   return res.status(200).json(
     new ApiResponse(200, "Employee status updated successfully", {

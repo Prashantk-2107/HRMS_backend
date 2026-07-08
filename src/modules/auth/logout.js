@@ -1,13 +1,14 @@
 import asyncHandler from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
-import { updateEmployee } from "../../services/employee/updateEmployee.js";
+import prisma from "../../config/db.js";
 
 const logoutEmployee = asyncHandler(async (req, res) => {
-  // Clear the tokens in the database
-  await updateEmployee(req.employee.emp_id, {
-    access_token_set: null,
-    refresh_token_set: null,
-  });
+  // Clear the specific session in the database
+  if (req.session_id) {
+    await prisma.session.delete({
+      where: { id: req.session_id },
+    }).catch(() => {});
+  }
 
   const cookieOptions = {
     httpOnly: true,
