@@ -18,14 +18,22 @@ const uploadOnCloudinary = async (localFilePath, folder = "crm_uploads") => {
     });
 
     // File uploaded successfully, remove the local file
-    if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
+    try {
+      await fs.promises.unlink(localFilePath);
+    } catch (unlinkError) {
+      if (unlinkError.code !== "ENOENT") {
+        console.error("Failed to delete local file:", unlinkError);
+      }
     }
     return response;
   } catch (error) {
     // Ensure the local file is cleaned up even if the upload failed
-    if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
+    try {
+      await fs.promises.unlink(localFilePath);
+    } catch (unlinkError) {
+      if (unlinkError.code !== "ENOENT") {
+        console.error("Failed to delete local file after failed upload:", unlinkError);
+      }
     }
     console.error("Cloudinary upload failed:", error);
     return null;

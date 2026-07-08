@@ -33,8 +33,14 @@ router.post(
       await checkMiddleware(req, res, next);
     } catch (error) {
       // If error occurs, clean up the uploaded file
-      if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
+      if (req.file && req.file.path) {
+        try {
+          await fs.promises.unlink(req.file.path);
+        } catch (unlinkError) {
+          if (unlinkError.code !== "ENOENT") {
+            console.error("Failed to delete local file:", unlinkError);
+          }
+        }
       }
       next(error);
     }

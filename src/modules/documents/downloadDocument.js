@@ -2,6 +2,7 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { getDocumentForDownloadService } from "../../services/documents/downloadDocument.js";
 import prisma from "../../config/db.js";
+import { Readable } from "stream";
 
 /**
  * Controller to handle downloading a document.
@@ -50,14 +51,15 @@ const downloadDocument = asyncHandler(async (req, res) => {
       throw new ApiError(502, "Failed to fetch document from cloud storage");
     }
 
-    const arrayBuffer = await fileResponse.arrayBuffer();
     const contentType = fileResponse.headers.get("content-type") || "application/octet-stream";
     const extension = document.file_url.split(".").pop() || "";
     const filename = `${document.document_name || document.document_type || "document"}.${extension}`;
 
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.send(Buffer.from(arrayBuffer));
+
+    // Stream response directly to client rather than holding full file in memory
+    Readable.fromWeb(fileResponse.body).pipe(res);
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
