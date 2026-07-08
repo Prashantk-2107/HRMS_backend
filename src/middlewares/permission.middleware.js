@@ -30,55 +30,70 @@ const checkPermission = (requiredPermission) => {
       throw new ApiError(403, "Forbidden: User does not have a role assigned.");
     }
 
-    // 1. Find the target permission first to get its ID
-    const targetPermission = await prisma.permission.findFirst({
-      where: {
-        name: requiredPermission,
-        is_active: true,
+    // 1. Consolidate Target Permission, Extra Overrides, and Role Permissions in a single query
+    const employeeWithPermissions = await prisma.employee.findUnique({
+      where: { emp_id: employee.emp_id },
+      select: {
+        extraPermissions: {
+          where: {
+            permission: {
+              name: requiredPermission,
+              is_active: true,
+            },
+          },
+          select: {
+            isGranted: true,
+          },
+        },
+        role: {
+          select: {
+            rolePermissions: {
+              where: {
+                permission: {
+                  name: requiredPermission,
+                  is_active: true,
+                },
+              },
+              select: {
+                isGranted: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    if (!targetPermission) {
-      throw new ApiError(
-        403,
-        `Forbidden: The required permission (${requiredPermission}) does not exist or is inactive.`,
-      );
+    if (!employeeWithPermissions) {
+      throw new ApiError(401, "Unauthorized: Employee record not found.");
     }
 
-    // 2. Check if there is an override in ExtraPermission for this employee
-    const extraPermission = await prisma.extraPermission.findFirst({
-      where: {
-        emp_id: employee.emp_id,
-        permission_id: targetPermission.permission_id,
-      },
-    });
+    const { extraPermissions, role } = employeeWithPermissions;
 
-    if (extraPermission !== null) {
-      if (!extraPermission.isGranted) {
+    // 2. First check the extra permission override (specific to this employee)
+    if (extraPermissions && extraPermissions.length > 0) {
+      if (extraPermissions[0].isGranted) {
+        return next();
+      } else {
         throw new ApiError(
           403,
           `Forbidden: You do not have the required permission (${requiredPermission}) to perform this action.`,
         );
       }
-      return next();
     }
 
-    // 3. Fallback to role-based permission check
-    const rolePermission = await prisma.rolePermission.findFirst({
-      where: {
-        role_id: employee.role_id,
-        permission_id: targetPermission.permission_id,
-      },
-    });
-
-    if (!rolePermission || !rolePermission.isGranted) {
-      throw new ApiError(
-        403,
-        `Forbidden: You do not have the required permission (${requiredPermission}) to perform this action.`,
-      );
+    // 3. Fallback to standard role-based permission checks
+    const rolePermissions = role?.rolePermissions || [];
+    if (rolePermissions.length > 0) {
+      if (rolePermissions[0].isGranted) {
+        return next();
+      }
     }
 
-    next();
+    // Default fallback: Permission not found, inactive, or not granted
+    throw new ApiError(
+      403,
+      `Forbidden: You do not have the required permission (${requiredPermission}) to perform this action.`,
+    );
   });
 };
 

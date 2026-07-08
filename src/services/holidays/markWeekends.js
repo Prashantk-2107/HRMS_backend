@@ -10,7 +10,7 @@ import { ApiError } from "../../utils/ApiError.js";
 async function markWeekendsService({ year, month }) {
   const jsMonth = month - 1; // 0-based for JS Date
   const daysInMonth = new Date(year, month, 0).getDate();
-  const createdHolidays = [];
+  const weekendDates = [];
 
   for (let d = 1; d <= daysInMonth; d++) {
     const tempDate = new Date(year, jsMonth, d);
@@ -19,29 +19,58 @@ async function markWeekendsService({ year, month }) {
     if (dayOfWeek === 0 || dayOfWeek === 6) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const parsedDate = new Date(dateStr);
-
-      // Check if a holiday already exists on this date
-      const existingHoliday = await prisma.holiday.findFirst({
-        where: {
-          holiday_date: parsedDate,
-        },
+      weekendDates.push({
+        parsedDate,
+        holidayName: dayOfWeek === 6 ? "Saturday" : "Sunday",
       });
-
-      if (!existingHoliday) {
-        const holidayName = dayOfWeek === 6 ? "Saturday" : "Sunday";
-        const newHoliday = await prisma.holiday.create({
-          data: {
-            holiday_date: parsedDate,
-            holiday_name: holidayName,
-            holiday_type: "company",
-          },
-        });
-        createdHolidays.push(newHoliday);
-      }
     }
   }
 
-  return createdHolidays;
+  if (weekendDates.length === 0) {
+    return [];
+  }
+
+  // 1. Fetch any holidays already existing on these weekend dates in a single query
+  const existingHolidays = await prisma.holiday.findMany({
+    where: {
+      holiday_date: {
+        in: weekendDates.map((w) => w.parsedDate),
+      },
+    },
+  });
+
+  const existingDatesSet = new Set(
+    existingHolidays.map((h) => h.holiday_date.toISOString())
+  );
+
+  // 2. Filter weekends that do not exist yet
+  const weekendsToCreate = weekendDates
+    .filter((w) => !existingDatesSet.has(w.parsedDate.toISOString()))
+    .map((w) => ({
+      holiday_date: w.parsedDate,
+      holiday_name: w.holidayName,
+      holiday_type: "company",
+    }));
+
+  if (weekendsToCreate.length === 0) {
+    return [];
+  }
+
+  // 3. Create all missing weekend holidays in a single bulk insert
+  await prisma.holiday.createMany({
+    data: weekendsToCreate,
+  });
+
+  // 4. Retrieve the newly created holidays to return them in full
+  const newlyCreatedHolidays = await prisma.holiday.findMany({
+    where: {
+      holiday_date: {
+        in: weekendsToCreate.map((w) => w.holiday_date),
+      },
+    },
+  });
+
+  return newlyCreatedHolidays;
 }
 
 export { markWeekendsService };

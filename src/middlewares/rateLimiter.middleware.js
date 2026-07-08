@@ -1,4 +1,6 @@
 import { rateLimit } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
+import redisConnection from "../config/redisConfig.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const getRemainingTimeString = (resetTime) => {
@@ -26,6 +28,10 @@ const authRateLimiter = rateLimit({
   limit: 10, // Limit each IP to 10 requests per windowMs
   standardHeaders: "draft-7", // combines RateLimit headers
   legacyHeaders: false, // disables X-RateLimit-* headers
+  store: new RedisStore({
+    sendCommand: (...args) => redisConnection.call(...args),
+    prefix: "rl:auth:",
+  }),
   handler: (req, res, next, options) => {
     const timeRemaining = getRemainingTimeString(req.rateLimit?.resetTime);
     next(
@@ -43,6 +49,10 @@ const apiRateLimiter = rateLimit({
   limit: 100, // Limit each IP to 100 requests per windowMs
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args) => redisConnection.call(...args),
+    prefix: "rl:api:",
+  }),
   handler: (req, res, next, options) => {
     const timeRemaining = getRemainingTimeString(req.rateLimit?.resetTime);
     next(
@@ -60,6 +70,10 @@ const verifyOtpRateLimiter = rateLimit({
   limit: 10,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args) => redisConnection.call(...args),
+    prefix: "rl:verify_otp:",
+  }),
   handler: (req, res, next, options) => {
     const timeRemaining = getRemainingTimeString(req.rateLimit?.resetTime);
     next(
