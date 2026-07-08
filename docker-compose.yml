@@ -42,8 +42,8 @@ services:
       - DATABASE_URL=postgresql://postgres:Kamboj%402004@db:5432/CRM_DATABASE
       - REDIS_URL=redis://redis:6379
       - PORT=5000
-      - ACCESS_TOKEN_SECRET=$$2a$$12$$.kdBaymE7apKZuHM33OMbeMHWCf3TzsEEzTHGggbTsT8HHXgXgj/W
-      - REFRESH_TOKEN_SECRET=$$2a$$12$$DRdoBLoIwWIz5hRRhpaPTu3oZlNe6oeSd2BAn3FiKYZyjPYGHMRgS
+      - ACCESS_TOKEN_SECRET=4e2cfc23e8009dfd7a2fa71da05c48b29ecb7194685ffbcfcebf43cb4620f30c
+      - REFRESH_TOKEN_SECRET=fb97ea63c4cbb80dc2463fbda7e4ba3e472288339b1399882a89c89ee4a47854
     depends_on:
       db:
         condition: service_healthy

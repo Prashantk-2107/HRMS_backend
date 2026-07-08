@@ -14,35 +14,51 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
 
   const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-  const employee = await prisma.employee.findUnique({
-    where: { emp_id: decodedToken.emp_id },
+  if (!decodedToken.session_id) {
+    throw new ApiError(401, "Invalid Access Token: No session associated");
+  }
+
+  // Retrieve session and associated employee/role details
+  const session = await prisma.session.findUnique({
+    where: { id: decodedToken.session_id },
     include: {
-      role: {
-        select: {
-          name: true,
+      employee: {
+        include: {
+          role: {
+            select: {
+              name: true,
+            },
+          },
         },
       },
     },
   });
 
+  if (!session) {
+    throw new ApiError(401, "Session has expired or been invalidated");
+  }
+
+  if (session.expires_at < new Date()) {
+    // Session has expired, clean it up asynchronously
+    await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+    throw new ApiError(401, "Session has expired");
+  }
+
+  const employee = session.employee;
   if (!employee) {
-    throw new ApiError(401, "Invalid Access Token");
+    throw new ApiError(401, "Employee associated with this session not found");
   }
 
   if (employee.employee_status !== "active") {
     throw new ApiError(403, "Your account is inactive");
   }
 
-  // Optional: Validate session by matching the database token
-  if (employee.access_token_set !== token) {
-    throw new ApiError(401, "Access Token has expired or been invalidated");
-  }
-
-  // Sanitize employee (remove password) before attaching
+  // Sanitize employee (remove password) before attaching to request
   const reqEmployee = { ...employee };
   delete reqEmployee.password;
 
   req.employee = reqEmployee;
+  req.session_id = session.id;
   next();
 });
 

@@ -38,8 +38,6 @@ async function uploadProfilePhotoService(emp_id, localFilePath) {
   // Sanitize the updated employee details
   const sanitizedEmployee = { ...updatedEmployee };
   delete sanitizedEmployee.password;
-  delete sanitizedEmployee.access_token_set;
-  delete sanitizedEmployee.refresh_token_set;
 
   return sanitizedEmployee;
 }

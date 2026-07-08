@@ -14,7 +14,14 @@ const loginEmployee = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Validation failed", formattedErrors);
   }
 
-  const result = await loginService(validation.data);
+  const deviceInfo = req.headers["user-agent"] || null;
+  const ipAddress = req.ip || req.headers["x-forwarded-for"] || null;
+
+  const result = await loginService({
+    ...validation.data,
+    deviceInfo,
+    ipAddress,
+  });
 
   const cookieOptions = {
     httpOnly: true,
