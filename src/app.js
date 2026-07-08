@@ -5,6 +5,8 @@ import errorHandler from "./middlewares/errorHandler.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // Standard middlewares
 const allowedOrigins = [
   process.env.FRONTEND_URL
