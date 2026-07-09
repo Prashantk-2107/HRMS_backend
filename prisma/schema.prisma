@@ -82,6 +82,7 @@ model Employee {
   verifiedDocs             EmployeeDocument[]    @relation("VerifierToDocuments")
   extraPermissions         ExtraPermission[]
   sessions                 Session[]
+  regularizations          AttendanceRegularization[]
 
   @@map("employees")
 }
@@ -146,6 +147,7 @@ model Attendance {
   created_at      DateTime         @default(now())
   updated_at      DateTime         @updatedAt
   employee        Employee         @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+  regularizations AttendanceRegularization[]
 
   @@unique([emp_id, attendance_date])
   @@map("attendances")
@@ -215,4 +217,29 @@ enum AttendanceStatus {
   half_day
   leave
   holiday
+}
+
+model AttendanceRegularization {
+  id               String               @id @default(uuid()) @db.Uuid
+  attendance_id    String               @db.Uuid
+  emp_id           String               @db.Uuid
+  requested_date   DateTime             @db.Date
+  check_in         DateTime?
+  check_out        DateTime?
+  reason           String               @db.VarChar(255)
+  status           RegularizationStatus @default(pending)
+  rejection_reason String?              @db.VarChar(255)
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+  
+  attendance       Attendance           @relation(fields: [attendance_id], references: [id], onDelete: Cascade)
+  employee         Employee             @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+
+  @@map("attendance_regularizations")
+}
+
+enum RegularizationStatus {
+  pending
+  approved
+  rejected
 }

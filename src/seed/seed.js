@@ -25,6 +25,7 @@ async function main() {
     runScript('seedRolePermission.js');
     runScript('seedAdmin.js');
     runScript('seedEmployes.js');
+    runScript('seedAttendance.js');
     console.log('\n=========================================');
     console.log('Database seeded successfully!');
     console.log('=========================================');
