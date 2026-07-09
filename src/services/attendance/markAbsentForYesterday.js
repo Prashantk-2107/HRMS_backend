@@ -66,17 +66,39 @@ async function markAbsentForYesterdayService() {
     });
 
     if (!existing) {
-      // Case 1: No check-in: mark as absent
+      // Check if employee has an approved leave request covering attendanceDate
+      const approvedLeave = await prisma.leaveRequest.findFirst({
+        where: {
+          emp_id,
+          status: "approved",
+          start_date: { lte: attendanceDate },
+          end_date: { gte: attendanceDate },
+        },
+      });
+
+      const finalStatus = approvedLeave ? "leave" : "absent";
+
       await prisma.attendance.create({
         data: {
           emp_id,
           attendance_date: attendanceDate,
-          status: "absent",
+          status: finalStatus,
         },
       });
-      console.log(`[Absent Job] Marked employee ${emp_id} as ABSENT (no check-in)`);
+      console.log(`[Absent Job] Marked employee ${emp_id} as ${finalStatus.toUpperCase()} (no check-in)`);
     } else if (existing.check_in && !existing.check_out) {
-      // Case 2: Checked-in but did not check out: update status to absent
+      // Checked-in but did not check out: update status to absent (or leave if approved)
+      const approvedLeave = await prisma.leaveRequest.findFirst({
+        where: {
+          emp_id,
+          status: "approved",
+          start_date: { lte: attendanceDate },
+          end_date: { gte: attendanceDate },
+        },
+      });
+
+      const finalStatus = approvedLeave ? "leave" : "absent";
+
       await prisma.attendance.update({
         where: {
           emp_id_attendance_date: {
@@ -85,10 +107,10 @@ async function markAbsentForYesterdayService() {
           },
         },
         data: {
-          status: "absent",
+          status: finalStatus,
         },
       });
-      console.log(`[Absent Job] Marked employee ${emp_id} as ABSENT (forgot to check-out)`);
+      console.log(`[Absent Job] Marked employee ${emp_id} as ${finalStatus.toUpperCase()} (forgot to check-out)`);
     }
   }
 }
