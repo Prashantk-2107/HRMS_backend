@@ -8,12 +8,6 @@ import { getAnalyticsService } from "../../services/attendance/getAnalytics.js";
  * Restricted to HR/Admin/Managers.
  */
 const getAnalytics = asyncHandler(async (req, res) => {
-  const roleName = req.employee.role?.name?.toLowerCase().replace(/[\s_-]/g, "");
-  const hasAccess = ["superadmin", "humanresource", "projectmanager"].includes(roleName);
-
-  if (!hasAccess) {
-    throw new ApiError(403, "Forbidden: You do not have permissions to access attendance analytics.");
-  }
 
   const year = parseInt(req.query.year);
   const month = parseInt(req.query.month);

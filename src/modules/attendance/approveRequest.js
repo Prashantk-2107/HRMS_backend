@@ -8,13 +8,6 @@ import { approveRequestService } from "../../services/attendance/approveRequest.
  * Accessible only to Super Admin, HR, and Project Manager.
  */
 const approveRequest = asyncHandler(async (req, res) => {
-  const roleName = req.employee.role?.name?.toLowerCase().replace(/[\s_-]/g, "");
-  const hasAccess = ["superadmin", "humanresource", "projectmanager"].includes(roleName);
-
-  if (!hasAccess) {
-    throw new ApiError(403, "Forbidden: You do not have permissions to approve regularization requests.");
-  }
-
   const { id } = req.params;
   const request = await approveRequestService(id);
 

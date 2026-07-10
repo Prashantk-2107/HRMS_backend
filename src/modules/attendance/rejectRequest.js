@@ -9,13 +9,6 @@ import { rejectRegularizationSchema } from "../../validations/regularization.val
  * Accessible only to Super Admin, HR, and Project Manager.
  */
 const rejectRequest = asyncHandler(async (req, res) => {
-  const roleName = req.employee.role?.name?.toLowerCase().replace(/[\s_-]/g, "");
-  const hasAccess = ["superadmin", "humanresource", "projectmanager"].includes(roleName);
-
-  if (!hasAccess) {
-    throw new ApiError(403, "Forbidden: You do not have permissions to reject regularization requests.");
-  }
-
   const validation = rejectRegularizationSchema.safeParse(req.body);
 
   if (!validation.success) {

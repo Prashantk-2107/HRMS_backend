@@ -52,66 +52,104 @@ async function markAbsentForYesterdayService() {
     return roleName !== "superadmin" && roleName !== "admin";
   });
 
+  const targetEmpIds = targetEmployees.map((emp) => emp.emp_id);
+
+  if (targetEmpIds.length === 0) {
+    return;
+  }
+
+  // 1. Fetch all existing attendance records for target employees on yesterday's date in a single query
+  const existingAttendances = await prisma.attendance.findMany({
+    where: {
+      emp_id: { in: targetEmpIds },
+      attendance_date: attendanceDate,
+    },
+    select: {
+      emp_id: true,
+      check_in: true,
+      check_out: true,
+      status: true,
+    },
+  });
+
+  const attendanceMap = new Map(existingAttendances.map((a) => [a.emp_id, a]));
+
+  // 2. Fetch all approved leave requests covering yesterday's date in a single query
+  const approvedLeaves = await prisma.leaveRequest.findMany({
+    where: {
+      emp_id: { in: targetEmpIds },
+      status: "approved",
+      start_date: { lte: attendanceDate },
+      end_date: { gte: attendanceDate },
+    },
+    select: {
+      emp_id: true,
+    },
+  });
+
+  const leaveSet = new Set(approvedLeaves.map((l) => l.emp_id));
+
+  const toCreate = [];
+  const toUpdate = [];
+
   for (const emp of targetEmployees) {
     const emp_id = emp.emp_id;
-
-    // Check if there is an attendance record for yesterday
-    const existing = await prisma.attendance.findUnique({
-      where: {
-        emp_id_attendance_date: {
-          emp_id,
-          attendance_date: attendanceDate,
-        },
-      },
-    });
+    const existing = attendanceMap.get(emp_id);
+    const hasApprovedLeave = leaveSet.has(emp_id);
+    const finalStatus = hasApprovedLeave ? "leave" : "absent";
 
     if (!existing) {
-      // Check if employee has an approved leave request covering attendanceDate
-      const approvedLeave = await prisma.leaveRequest.findFirst({
-        where: {
-          emp_id,
-          status: "approved",
-          start_date: { lte: attendanceDate },
-          end_date: { gte: attendanceDate },
-        },
+      toCreate.push({
+        emp_id,
+        attendance_date: attendanceDate,
+        status: finalStatus,
       });
-
-      const finalStatus = approvedLeave ? "leave" : "absent";
-
-      await prisma.attendance.create({
-        data: {
-          emp_id,
-          attendance_date: attendanceDate,
-          status: finalStatus,
-        },
-      });
-      console.log(`[Absent Job] Marked employee ${emp_id} as ${finalStatus.toUpperCase()} (no check-in)`);
     } else if (existing.check_in && !existing.check_out) {
-      // Checked-in but did not check out: update status to absent (or leave if approved)
-      const approvedLeave = await prisma.leaveRequest.findFirst({
-        where: {
+      if (existing.status !== finalStatus) {
+        toUpdate.push({
           emp_id,
-          status: "approved",
-          start_date: { lte: attendanceDate },
-          end_date: { gte: attendanceDate },
-        },
-      });
-
-      const finalStatus = approvedLeave ? "leave" : "absent";
-
-      await prisma.attendance.update({
-        where: {
-          emp_id_attendance_date: {
-            emp_id,
-            attendance_date: attendanceDate,
-          },
-        },
-        data: {
           status: finalStatus,
-        },
-      });
-      console.log(`[Absent Job] Marked employee ${emp_id} as ${finalStatus.toUpperCase()} (forgot to check-out)`);
+        });
+      }
     }
+  }
+
+  // 3. Bulk insert new attendance records
+  if (toCreate.length > 0) {
+    await prisma.attendance.createMany({
+      data: toCreate,
+    });
+    console.log(`[Absent Job] Bulk created ${toCreate.length} absent/leave records.`);
+  }
+
+  // 4. Bulk update records where employees checked in but forgot to check out
+  const toMarkAbsentIds = toUpdate.filter((u) => u.status === "absent").map((u) => u.emp_id);
+  const toMarkLeaveIds = toUpdate.filter((u) => u.status === "leave").map((u) => u.emp_id);
+
+  if (toMarkAbsentIds.length > 0) {
+    await prisma.attendance.updateMany({
+      where: {
+        attendance_date: attendanceDate,
+        emp_id: { in: toMarkAbsentIds },
+      },
+      data: {
+        status: "absent",
+      },
+    });
+    console.log(`[Absent Job] Bulk updated ${toMarkAbsentIds.length} records to ABSENT (forgot check-out).`);
+  }
+
+  if (toMarkLeaveIds.length > 0) {
+    await prisma.attendance.updateMany({
+      where: {
+        attendance_date: attendanceDate,
+        emp_id: { in: toMarkLeaveIds },
+      },
+      data: {
+        status: "leave",
+      },
+    });
+    console.log(`[Absent Job] Bulk updated ${toMarkLeaveIds.length} records to LEAVE (forgot check-out).`);
   }
 }
 

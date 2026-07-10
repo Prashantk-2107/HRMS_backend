@@ -30,12 +30,25 @@ router.post(
 
       // Otherwise, run checkPermission("emp:add_documents")
       const checkMiddleware = checkPermission("emp:add_documents");
-      await checkMiddleware(req, res, next);
+      checkMiddleware(req, res, (err) => {
+        if (err) {
+          if (req.file && req.file.path) {
+            try {
+              fs.unlinkSync(req.file.path);
+            } catch (unlinkError) {
+              if (unlinkError.code !== "ENOENT") {
+                console.error("Failed to delete local file:", unlinkError);
+              }
+            }
+          }
+          return next(err);
+        }
+        next();
+      });
     } catch (error) {
-      // If error occurs, clean up the uploaded file
       if (req.file && req.file.path) {
         try {
-          await fs.promises.unlink(req.file.path);
+          fs.unlinkSync(req.file.path);
         } catch (unlinkError) {
           if (unlinkError.code !== "ENOENT") {
             console.error("Failed to delete local file:", unlinkError);

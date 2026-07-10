@@ -21,22 +21,26 @@ async function main() {
     return allPermissions.find((p) => normalize(p.name) === target);
   };
 
+  const allRolesList = ["super_admin", "Human Resource", "Project_manager", "Developer", "Accountant", "UI/UX", "Quality Analyst", "SEO", "Marketing", "Business Analyst"];
+  const managementRoles = ["super_admin", "Human Resource", "Project_manager"];
+  const hrAndAdmin = ["super_admin", "Human Resource"];
+
   const mappings = [
     {
       permissionName: "emp:get_all",
-      roles: ["Human_resource", "super_admin", "Project_manager"],
+      roles: allRolesList, // All employees can view company directory
     },
     {
       permissionName: "emp:create",
-      roles: ["super_admin", "Human_resource"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "emp:delete",
-      roles: ["super_admin", "Human_resource"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "emp:update",
-      roles: ["super_admin", "Human_resource"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "role:create",
@@ -44,7 +48,7 @@ async function main() {
     },
     {
       permissionName: "role:get_all",
-      roles: ["Human_resource", "super_admin"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "role:delete",
@@ -56,39 +60,75 @@ async function main() {
     },
     {
       permissionName: "emp:assign_role",
-      roles: ["super_admin", "Human_resource", "Project_manager"],
+      roles: managementRoles,
     },
     {
       permissionName: "emp:view_any",
-      roles: ["super_admin", "Human_resource", "Project_manager"],
+      roles: allRolesList, // All employees can view basic profile of other colleagues
     },
     {
       permissionName: "emp:view_documents",
-      roles: ["Human_resource", "super_admin", "Project_manager"],
+      roles: managementRoles,
     },
     {
       permissionName: "emp:add_documents",
-      roles: ["Human_resource", "super_admin"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "emp:remove_documents",
-      roles: ["Human_resource", "super_admin"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "emp:verify_documents",
-      roles: ["Human_resource", "super_admin"],
+      roles: hrAndAdmin,
     },
     {
       permissionName: "emp:manage_bank_details",
-      roles: ["Human_resource", "super_admin"],
+      roles: ["super_admin", "Human Resource", "Accountant"], // Accountants can manage bank details for payroll
     },
     {
       permissionName: "holiday:manage",
-      roles: ["super_admin", "Human_resource", "Project_manager"],
+      roles: managementRoles,
     },
     {
       permissionName: "permission:grantAndRevoke",
       roles: ["super_admin"],
+    },
+    {
+      permissionName: "leave:view_pending",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "leave:approve",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "leave:reject",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "attendance:view_pending",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "attendance:approve",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "attendance:reject",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "attendance:view_today_dashboard",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "attendance:view_monthly_report",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "attendance:view_analytics",
+      roles: managementRoles,
     },
   ];
 

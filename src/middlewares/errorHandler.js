@@ -1,11 +1,19 @@
 import { ApiError } from "../utils/ApiError.js";
+import { z } from "zod";
 
 const errorHandler = (err, req, res, next) => {
   let { statusCode, message, error } = err;
 
   // If the error is not an instance of ApiError, normalize it
   if (!(err instanceof ApiError)) {
-    if (err.name === "TokenExpiredError") {
+    if (err instanceof z.ZodError) {
+      statusCode = 400;
+      message = "Validation failed";
+      error = err.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      }));
+    } else if (err.name === "TokenExpiredError") {
       statusCode = 401;
       message = "Access token has expired. Please log in again.";
       error = err.message;
