@@ -12,6 +12,7 @@ import { getTodayDashboard } from "../modules/attendance/getTodayDashboard.js";
 import { getMonthlyReport } from "../modules/attendance/getMonthlyReport.js";
 import { getAnalytics } from "../modules/attendance/getAnalytics.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { checkPermission } from "../middlewares/permission.middleware.js";
 
 const router = Router();
 
@@ -27,13 +28,13 @@ router.get("/my-summary", getMyAttendanceSummary);
 // Regularization routes
 router.post("/regularize", createRequest);
 router.get("/regularizations/my", getMyRequests);
-router.get("/regularizations/pending", getPendingRequests);
-router.post("/regularizations/:id/approve", approveRequest);
-router.post("/regularizations/:id/reject", rejectRequest);
+router.get("/regularizations/pending", checkPermission("attendance:view_pending"), getPendingRequests);
+router.post("/regularizations/:id/approve", checkPermission("attendance:approve"), approveRequest);
+router.post("/regularizations/:id/reject", checkPermission("attendance:reject"), rejectRequest);
 
 // Admin dashboard routes
-router.get("/admin/today-dashboard", getTodayDashboard);
-router.get("/admin/monthly-report", getMonthlyReport);
-router.get("/admin/analytics", getAnalytics);
+router.get("/admin/today-dashboard", checkPermission("attendance:view_today_dashboard"), getTodayDashboard);
+router.get("/admin/monthly-report", checkPermission("attendance:view_monthly_report"), getMonthlyReport);
+router.get("/admin/analytics", checkPermission("attendance:view_analytics"), getAnalytics);
 
 export default router;

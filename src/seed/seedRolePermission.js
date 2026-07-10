@@ -90,6 +90,42 @@ async function main() {
       permissionName: "permission:grantAndRevoke",
       roles: ["super_admin"],
     },
+    {
+      permissionName: "leave:view_pending",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "leave:approve",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "leave:reject",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "attendance:view_pending",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "attendance:approve",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "attendance:reject",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "attendance:view_today_dashboard",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "attendance:view_monthly_report",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
+    {
+      permissionName: "attendance:view_analytics",
+      roles: ["super_admin", "Human_resource", "Project_manager"],
+    },
   ];
 
   for (const mapping of mappings) {

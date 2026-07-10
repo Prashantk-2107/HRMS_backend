@@ -50,7 +50,7 @@ async function getAnalyticsService({ year, month }) {
     },
   });
 
-  const holidays = await prisma.holidays.findMany({
+  const holidays = await prisma.holiday.findMany({
     where: {
       holiday_date: {
         gte: startDate,

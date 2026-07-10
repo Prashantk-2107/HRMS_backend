@@ -5,6 +5,7 @@ import { getPendingLeaves } from "../modules/leave/getPendingLeaves.js";
 import { approveRequest } from "../modules/leave/approveRequest.js";
 import { rejectRequest } from "../modules/leave/rejectRequest.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { checkPermission } from "../middlewares/permission.middleware.js";
 
 const router = Router();
 
@@ -13,8 +14,8 @@ router.use(verifyJWT);
 
 router.post("/request", createRequest);
 router.get("/my", getMyLeaves);
-router.get("/pending", getPendingLeaves);
-router.post("/:id/approve", approveRequest);
-router.post("/:id/reject", rejectRequest);
+router.get("/pending", checkPermission("leave:view_pending"), getPendingLeaves);
+router.post("/:id/approve", checkPermission("leave:approve"), approveRequest);
+router.post("/:id/reject", checkPermission("leave:reject"), rejectRequest);
 
 export default router;

@@ -38,7 +38,7 @@ async function approveLeaveRequestService(id) {
     const attendanceUpserts = [];
 
     // Loop through each date in the leave request range
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
       const dStr = d.toISOString().split('T')[0];
       const targetDate = new Date(dStr);
 

@@ -8,13 +8,6 @@ import { approveLeaveRequestService } from "../../services/leave/approveRequest.
  * Restricted to HR/Admin.
  */
 const approveRequest = asyncHandler(async (req, res) => {
-  const roleName = req.employee.role?.name?.toLowerCase().replace(/[\s_-]/g, "");
-  const hasAccess = ["superadmin", "humanresource", "projectmanager"].includes(roleName);
-
-  if (!hasAccess) {
-    throw new ApiError(403, "Forbidden: Access denied to approve leave requests.");
-  }
-
   const { id } = req.params;
   const request = await approveLeaveRequestService(id);
 

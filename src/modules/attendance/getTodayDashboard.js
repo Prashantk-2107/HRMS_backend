@@ -8,13 +8,6 @@ import { getTodayDashboardService } from "../../services/attendance/getTodayDash
  * Restricted to HR/Admin.
  */
 const getTodayDashboard = asyncHandler(async (req, res) => {
-  const roleName = req.employee.role?.name?.toLowerCase().replace(/[\s_-]/g, "");
-  const hasAccess = ["superadmin", "humanresource", "projectmanager"].includes(roleName);
-
-  if (!hasAccess) {
-    throw new ApiError(403, "Forbidden: You do not have permissions to view the team dashboard.");
-  }
-
   const dashboardData = await getTodayDashboardService();
 
   return res.status(200).json(

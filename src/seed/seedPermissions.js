@@ -23,6 +23,15 @@ async function main() {
     { name: "emp:grant_extra_permission" },
     { name: "holiday:manage" },
     { name: "permission:grantAndRevoke" },
+    { name: "leave:view_pending" },
+    { name: "leave:approve" },
+    { name: "leave:reject" },
+    { name: "attendance:view_pending" },
+    { name: "attendance:approve" },
+    { name: "attendance:reject" },
+    { name: "attendance:view_today_dashboard" },
+    { name: "attendance:view_monthly_report" },
+    { name: "attendance:view_analytics" },
   ];
 
   for (const permission of permissions) {
