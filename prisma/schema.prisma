@@ -53,37 +53,39 @@ model RolePermission {
 }
 
 model Employee {
-  emp_id                   String                @id @default(uuid()) @db.Uuid
-  empCode                  String                @unique @db.VarChar(20)
-  first_name               String?               @db.VarChar(100)
-  last_name                String?               @db.VarChar(100)
-  email                    String                @unique @db.VarChar(50)
+  emp_id                   String                     @id @default(uuid()) @db.Uuid
+  empCode                  String                     @unique @db.VarChar(20)
+  first_name               String?                    @db.VarChar(100)
+  last_name                String?                    @db.VarChar(100)
+  email                    String                     @unique @db.VarChar(50)
   profile_image            String?
-  address                  String
-  phone_number             String?               @unique @db.VarChar(10)
-  date_of_birth            DateTime?             @db.Date
-  joining_date             DateTime              @db.Date
+  address                  String?
+  phone_number             String?                    @unique @db.VarChar(20)
+  date_of_birth            DateTime?                  @db.Date
+  joining_date             DateTime                   @db.Date
   employment_type          EmploymentType?
   gender                   Gender?
-  employee_status          EmployeeStatus?       @default(active)
-  emergency_contact_name   String?               @db.VarChar(255)
-  emergency_contact_number String?               @db.VarChar(20)
-  password                 String?               @db.VarChar(255)
-  is_email_verified        Boolean               @default(false)
+  employee_status          EmployeeStatus?            @default(active)
+  emergency_contact_name   String?                    @db.VarChar(255)
+  emergency_contact_number String?                    @db.VarChar(20)
+  password                 String?                    @db.VarChar(255)
+  is_email_verified        Boolean                    @default(false)
   last_login_at            DateTime?
-  role_id                  String                @db.Uuid
-  created_at               DateTime              @default(now())
-  updated_at               DateTime              @updatedAt
+  role_id                  String                     @db.Uuid
+  created_at               DateTime                   @default(now())
+  updated_at               DateTime                   @updatedAt
   attendances              Attendance[]
   bank_details             EmployeeBankDetails[]
-  role                     Role                  @relation(fields: [role_id], references: [role_id])
-  documents                EmployeeDocument[]    @relation("EmployeeToDocuments")
-  uploadedDocs             EmployeeDocument[]    @relation("UploaderToDocuments")
-  verifiedDocs             EmployeeDocument[]    @relation("VerifierToDocuments")
+  role                     Role                       @relation(fields: [role_id], references: [role_id])
+  documents                EmployeeDocument[]         @relation("EmployeeToDocuments")
+  uploadedDocs             EmployeeDocument[]         @relation("UploaderToDocuments")
+  verifiedDocs             EmployeeDocument[]         @relation("VerifierToDocuments")
   extraPermissions         ExtraPermission[]
   sessions                 Session[]
   regularizations          AttendanceRegularization[]
   leaveRequests            LeaveRequest[]
+  createdProjects          Project[]                  @relation("CreatedProjects")
+  projectMembers           ProjectMember[]            @relation("ProjectMembers")
 
   @@map("employees")
 }
@@ -138,16 +140,16 @@ model EmployeeBankDetails {
 }
 
 model Attendance {
-  id              String           @id @default(uuid()) @db.Uuid
-  emp_id          String           @db.Uuid
-  attendance_date DateTime         @db.Date
+  id              String                     @id @default(uuid()) @db.Uuid
+  emp_id          String                     @db.Uuid
+  attendance_date DateTime                   @db.Date
   check_in        DateTime?
   check_out       DateTime?
   status          AttendanceStatus
-  working_hours   Decimal?         @db.Decimal(5, 2)
-  created_at      DateTime         @default(now())
-  updated_at      DateTime         @updatedAt
-  employee        Employee         @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+  working_hours   Decimal?                   @db.Decimal(5, 2)
+  created_at      DateTime                   @default(now())
+  updated_at      DateTime                   @updatedAt
+  employee        Employee                   @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
   regularizations AttendanceRegularization[]
 
   @@unique([emp_id, attendance_date])
@@ -232,9 +234,9 @@ model AttendanceRegularization {
   rejection_reason String?              @db.VarChar(255)
   created_at       DateTime             @default(now())
   updated_at       DateTime             @updatedAt
-  
-  attendance       Attendance           @relation(fields: [attendance_id], references: [id], onDelete: Cascade)
-  employee         Employee             @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+
+  attendance Attendance @relation(fields: [attendance_id], references: [id], onDelete: Cascade)
+  employee   Employee   @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
 
   @@map("attendance_regularizations")
 }
@@ -256,8 +258,8 @@ model LeaveRequest {
   rejection_reason String?     @db.VarChar(255)
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
-  
-  employee         Employee    @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
+
+  employee Employee @relation(fields: [emp_id], references: [emp_id], onDelete: Cascade)
 
   @@map("leave_requests")
 }
@@ -273,4 +275,52 @@ enum LeaveStatus {
   pending
   approved
   rejected
+}
+
+model Project {
+  project_id   String        @id @default(uuid()) @db.Uuid
+  project_name String        @db.VarChar(255)
+  status       ProjectStatus @default(planning)
+  description  String?       @db.Text
+  start_date   DateTime      @db.Date
+  end_date     DateTime      @db.Date
+  created_by   String        @db.Uuid
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  creator Employee        @relation("CreatedProjects", fields: [created_by], references: [emp_id], onDelete: Cascade)
+  members ProjectMember[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id              String   @id @default(uuid()) @db.Uuid
+  employee_id     String   @db.Uuid
+  project_id      String   @db.Uuid
+  joined_at       DateTime @default(now())
+  project_role_id String?  @db.Uuid
+
+  employee    Employee     @relation("ProjectMembers", fields: [employee_id], references: [emp_id], onDelete: Cascade)
+  project     Project      @relation(fields: [project_id], references: [project_id], onDelete: Cascade)
+  projectRole ProjectRole? @relation(fields: [project_role_id], references: [id], onDelete: SetNull)
+
+  @@unique([employee_id, project_id])
+  @@map("project_members")
+}
+
+model ProjectRole {
+  id        String          @id @default(uuid()) @db.Uuid
+  role_name String          @unique @db.VarChar(100)
+  members   ProjectMember[]
+
+  @@map("project_roles")
+}
+
+enum ProjectStatus {
+  planning
+  active
+  on_hold
+  completed
+  cancelled
 }

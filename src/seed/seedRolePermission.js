@@ -130,6 +130,30 @@ async function main() {
       permissionName: "attendance:view_analytics",
       roles: managementRoles,
     },
+    {
+      permissionName: "project:create",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "project:view_all",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "project:view",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "project:update",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "project:delete",
+      roles: managementRoles,
+    },
+    {
+      permissionName: "project:manage_members",
+      roles: managementRoles,
+    },
   ];
 
   for (const mapping of mappings) {

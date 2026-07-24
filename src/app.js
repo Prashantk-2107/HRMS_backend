@@ -60,6 +60,7 @@ import bankDetailsRouter from "./routes/bank_details.routes.js";
 import holidayRouter from "./routes/holiday.routes.js";
 import attendanceRouter from "./routes/attendance.routes.js";
 import leaveRouter from "./routes/leave.routes.js";
+import projectRouter from "./routes/project.routes.js";
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/employee", empRouter);
 app.use("/api/v1/role", roleRouter);
@@ -69,6 +70,7 @@ app.use("/api/v1/bank-details", bankDetailsRouter);
 app.use("/api/v1/holiday", holidayRouter);
 app.use("/api/v1/attendance", attendanceRouter);
 app.use("/api/v1/leaves", leaveRouter);
+app.use("/api/v1/projects", projectRouter);
 
 // Global error handler
 app.use(errorHandler);

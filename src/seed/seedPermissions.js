@@ -32,6 +32,12 @@ async function main() {
     { name: "attendance:view_today_dashboard" },
     { name: "attendance:view_monthly_report" },
     { name: "attendance:view_analytics" },
+    { name: "project:create" },
+    { name: "project:view_all" },
+    { name: "project:view" },
+    { name: "project:update" },
+    { name: "project:delete" },
+    { name: "project:manage_members" },
   ];
 
   for (const permission of permissions) {
